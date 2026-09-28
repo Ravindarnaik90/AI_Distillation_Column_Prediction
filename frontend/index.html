@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-Powered Distillation Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ═══════════════ HEADER ═══════════════ -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">⚗</div>
+      <div class="brand-text">
+        <h1>AI-Powered Distillation Intelligence</h1>
+        <p>Machine Learning-Based Prediction, Monitoring and Optimization of Distillation Processes</p>
+      </div>
+    </div>
+    <div class="status-cluster">
+      <div class="status-pill" id="statusPill">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Checking model…</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════ MAIN GRID ═══════════════ -->
+  <main class="main-grid">
+
+    <!-- ── LEFT: Process Inputs ── -->
+    <section class="panel inputs-panel">
+      <div class="panel-head">
+        <span class="panel-index">01</span>
+        <h2>Process Inputs</h2>
+        <button class="ghost-btn" id="loadDefaultBtn" title="Load the default example operating point">Default Example</button>
+      </div>
+
+      <div class="input-grid" id="inputGrid"><!-- populated by script.js --></div>
+
+      <div class="mass-balance" id="massBalanceBox">
+        <span id="mbIcon">✓</span>
+        <span id="mbText">Mass balance OK</span>
+      </div>
+
+      <button class="run-btn" id="runBtn">
+        <span class="run-btn-icon">▶</span> Run Prediction
+      </button>
+      <p class="hint-text">D + B should ≈ F (mass balance). Model: RandomForestRegressor · 21 engineered features.</p>
+    </section>
+
+    <!-- ── RIGHT: Prediction Result ── -->
+    <section class="panel result-panel">
+      <div class="panel-head">
+        <span class="panel-index">02</span>
+        <h2>Prediction Result</h2>
+      </div>
+
+      <div class="pred-box" id="predBox">
+        <div class="pred-label">PREDICTED ETHANOL MOLE FRACTION</div>
+        <div class="pred-value" id="predValue">—</div>
+        <div class="pred-percent" id="predPercent">— mol%</div>
+        <div class="pred-status" id="predStatus">Run a prediction to see results</div>
+      </div>
+
+      <div class="purity-scale">
+        <div class="purity-scale-label">
+          <span>PURITY SCALE</span><span id="purityScalePct">0%</span>
+        </div>
+        <div class="purity-bar-bg">
+          <div class="purity-bar-fill" id="purityBarFill"></div>
+        </div>
+        <div class="purity-scale-ticks">
+          <span>0%</span><span>75% spec</span><span>82% optimal</span><span>100%</span>
+        </div>
+      </div>
+
+      <div class="metric-grid" id="metricGrid"><!-- populated by script.js --></div>
+    </section>
+
+  </main>
+
+  <!-- ═══════════════ PROCESS VISUALIZATION ═══════════════ -->
+  <section class="panel wide-panel">
+    <div class="panel-head">
+      <span class="panel-index">03</span>
+      <h2>Process Visualization</h2>
+    </div>
+    <div class="viz-grid">
+      <div class="chart-card">
+        <div class="chart-title">Derived Operating Metrics</div>
+        <canvas id="metricsChart" height="220"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Raw Flow Balance (kmol/hr)</div>
+        <canvas id="flowChart" height="220"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ FEATURE IMPORTANCE + WHAT-IF ═══════════════ -->
+  <div class="two-col-grid">
+
+    <section class="panel">
+      <div class="panel-head">
+        <span class="panel-index">04</span>
+        <h2>Feature Importance</h2>
+      </div>
+      <p class="panel-subtext">Live importances from the trained RandomForestRegressor (model.pkl), not illustrative values.</p>
+      <canvas id="importanceChart" height="280"></canvas>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <span class="panel-index">05</span>
+        <h2>What-If Analysis</h2>
+      </div>
+      <p class="panel-subtext">Compare the current inputs against a modified reflux flow, run through the same corrected pipeline.</p>
+
+      <div class="whatif-control">
+        <label for="whatifL">Modified Reflux Flow L (kmol/hr)</label>
+        <input type="range" id="whatifL" min="300" max="1200" step="10" value="900">
+        <span id="whatifLVal">900</span>
+      </div>
+      <button class="run-btn secondary" id="whatifBtn">Compare Scenarios</button>
+
+      <table class="whatif-table" id="whatifTable">
+        <thead>
+          <tr><th>Parameter</th><th>Current</th><th>Modified</th></tr>
+        </thead>
+        <tbody id="whatifBody">
+          <tr><td colspan="3" class="muted">Run a comparison to see results</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+  </div>
+
+  <!-- ═══════════════ BATCH PREDICTION ═══════════════ -->
+  <section class="panel wide-panel">
+    <div class="panel-head">
+      <span class="panel-index">06</span>
+      <h2>Batch Prediction</h2>
+    </div>
+    <p class="panel-subtext">Upload a CSV with columns: <code>pressure, t1, L, V, D, B, F</code>. Each row is scored through the exact same corrected pipeline.</p>
+    <div class="batch-controls">
+      <input type="file" id="csvInput" accept=".csv">
+      <button class="ghost-btn" id="downloadTemplateBtn">Download Template CSV</button>
+      <button class="ghost-btn" id="downloadResultsBtn" disabled>Download Results CSV</button>
+    </div>
+    <div class="batch-summary" id="batchSummary"></div>
+    <div class="table-scroll">
+      <table class="batch-table" id="batchTable">
+        <thead>
+          <tr><th>#</th><th>Pressure</th><th>T1</th><th>L</th><th>V</th><th>D</th><th>B</th><th>F</th><th>Prediction</th><th>Status</th></tr>
+        </thead>
+        <tbody id="batchBody">
+          <tr><td colspan="10" class="muted">No batch results yet</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ═══════════════ MODEL INFO + CHAT ═══════════════ -->
+  <div class="two-col-grid">
+
+    <section class="panel">
+      <div class="panel-head">
+        <span class="panel-index">07</span>
+        <h2>Model Performance</h2>
+      </div>
+      <div class="perf-grid" id="perfGrid"><!-- populated by script.js --></div>
+      <div class="tips-list">
+        <div class="tip"><span>▲</span> Higher reflux → higher purity</div>
+        <div class="tip"><span>⚖</span> D + B ≈ F (mass balance)</div>
+        <div class="tip"><span>🌡</span> T1 near 78°C is ideal</div>
+        <div class="tip"><span>⛔</span> Flood risk if V &gt; 1200</div>
+        <div class="tip"><span>📐</span> Reflux ratio target: 1.5–2.2</div>
+      </div>
+    </section>
+
+    <section class="panel chat-panel">
+      <div class="panel-head">
+        <span class="panel-index">08</span>
+        <h2>DistilBot Assistant</h2>
+        <span class="chat-source-badge" id="chatSourceBadge">rule-based</span>
+      </div>
+      <div class="chat-window" id="chatWindow">
+        <div class="chat-msg bot">
+          I'm DistilBot — run a prediction, then ask me things like "is this purity good?" or "how do I improve it?"
+        </div>
+      </div>
+      <div class="chat-input-row">
+        <input type="text" id="chatInput" placeholder="Ask DistilBot about your column…" maxlength="300">
+        <button id="chatSendBtn">Send</button>
+      </div>
+    </section>
+
+  </div>
+
+  <footer class="app-footer">
+    AI-Powered Distillation Intelligence · FastAPI + RandomForestRegressor · Corrected feature ordering per <code>features_names.pkl</code>
+  </footer>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
